@@ -1,0 +1,128 @@
+program: train-sparse-sweep.py
+method: bayes
+metric:
+  name: last/top1
+  goal: maximize
+
+parameters:
+  lr0:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr1:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr2:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr3:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr4:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr5:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr6:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr7:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr8:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+  lr9:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1.0
+
+  sp0:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp1:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp2:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp3:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp4:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp5:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp6:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp7:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp8:
+    distribution: q_uniform
+    min: 0.0
+    max: 0.9
+    q: 0.01
+  sp9:
+    values: [0.9]
+
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - --project=imagenet-sweep
+  - --train_dir=/datasets/imagenet224/train
+  - --val_dir=/datasets/imagenet224/val
+  - --epochs=10
+  - --batch_size=128
+  - --num_workers=12
+  - --gpus=-1
+  - --strategy=ddp_spawn
+  - --lr0=${lr0}
+  - --lr1=${lr1}
+  - --lr2=${lr2}
+  - --lr3=${lr3}
+  - --lr4=${lr4}
+  - --lr5=${lr5}
+  - --lr6=${lr6}
+  - --lr7=${lr7}
+  - --lr8=${lr8}
+  - --lr9=${lr9}
+  - --sp0=${sp0}
+  - --sp1=${sp1}
+  - --sp2=${sp2}
+  - --sp3=${sp3}
+  - --sp4=${sp4}
+  - --sp5=${sp5}
+  - --sp6=${sp6}
+  - --sp7=${sp7}
+  - --sp8=${sp8}
+  - --sp9=${sp9}
