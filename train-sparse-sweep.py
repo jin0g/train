@@ -92,8 +92,8 @@ class SparseResNet50Module(L.LightningModule):
         logits = self(x)
         loss = self.criterion(logits, y)
         top1 = (logits.argmax(dim=1) == y).float().mean()
-        self.log("train/loss", loss, prog_bar=False, on_step=False, on_epoch=True, sync_dist=False)
-        self.log("train/top1", top1, prog_bar=True, on_step=False, on_epoch=True, sync_dist=False)
+        self.log("train/loss", loss, prog_bar=False, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("train/top1", top1, prog_bar=True, on_step=False, on_epoch=True, sync_dist=True)
         return loss
 
     def validation_step(self, batch, batch_idx: int):
@@ -101,8 +101,8 @@ class SparseResNet50Module(L.LightningModule):
         logits = self(x)
         loss = self.criterion(logits, y)
         top1 = (logits.argmax(dim=1) == y).float().mean()
-        self.log("val/loss", loss, prog_bar=False, on_step=False, on_epoch=True, sync_dist=False)
-        self.log("val/top1", top1, prog_bar=True, on_step=False, on_epoch=True, sync_dist=False)
+        self.log("val/loss", loss, prog_bar=False, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("val/top1", top1, prog_bar=True, on_step=False, on_epoch=True, sync_dist=True)
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
@@ -125,6 +125,12 @@ class SweepPruneAndLRCallback(Callback):
             return False
         return True
 
+    @staticmethod
+    def _detach_all(pl_module: SparseResNet50Module) -> None:
+        for sparsifier in pl_module.compression.registrations:
+            sparsifier.detach(pl_module.model)
+        pl_module.compression.registrations.clear()
+
     def on_train_epoch_start(self, trainer: L.Trainer, pl_module: SparseResNet50Module) -> None:
         epoch = trainer.current_epoch
         lr = float(self.sweep_cfg[f"lr{epoch}"]) * self.lr_factor
@@ -134,15 +140,16 @@ class SweepPruneAndLRCallback(Callback):
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
 
+        self._detach_all(pl_module)
         pl_module.compression.attach(
             SparseWeightUnstructured,
             self._target_filter,
             sparsity=sp,
         )
-        pl_module.log("lr", lr, prog_bar=True, on_step=False, on_epoch=True, sync_dist=False)
+        pl_module.log("lr", lr, prog_bar=True, on_step=False, on_epoch=True, sync_dist=True)
 
-    def on_train_end(self, trainer: L.Trainer, pl_module: SparseResNet50Module) -> None:
-        pl_module.compression.clear()
+    def on_train_epoch_end(self, trainer: L.Trainer, pl_module: SparseResNet50Module) -> None:
+        self._detach_all(pl_module)
 
 
 def build_sweep_config(epochs: int, sp: float) -> dict:
